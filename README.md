@@ -19,6 +19,10 @@ The official Monero GUI installer file is created on a windows machine, but we a
 
 To use the `make_exe.sh` script at home, ensure you have an ubuntu with wine / jq / curl installed. The only way to cause a differing hash would be if i've failed to account for system timezone offsets ( hopefully not one of those 'it works on my machine' moments ) Test and let me know!
 
+Or, you can just fork this repo, and run the actions file      
+![Screenshot from 2022-10-01 01-15-55](https://user-images.githubusercontent.com/77655812/193374469-2ca675f0-fd43-4462-81de-5b753b8893db.png)
+
+
 #### Improvements / TODO's
 
 Currently this can only be used 'after the fact' - when new binaries are uploaded to getmonero. Providing a copy of the Gitian-built GUI windows binaries is something in process at the moment. This will let people reproduce the installer before it is released. 
