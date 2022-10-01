@@ -7,7 +7,7 @@ First, a [pull request](https://github.com/monero-project/monero-gui/pull/4042) 
 
 Once this PR is merged, it triggers the Github action which creates them [here](https://github.com/monero-project/monero-gui/actions/runs/3147123066) (take note of the run id number at the end of the URL - this script requires it)
 
-We download the `docker-windows-static` file, then obtain a copy of Monero's 64bit binaries for windows (created by the Gitian build process, hashes of which can be found [here](https://github.com/monero-project/gitian.sigs)).
+We download the `docker-windows-static` file, then obtain a copy of Monero's 64bit binaries for windows, from getmonero.org (created by the Gitian build process, hashes of which can be found [here](https://github.com/monero-project/gitian.sigs)).
 
 After placing all the files correcly and touching them so they have the same modification time as the `monero-wallet-gui.exe` from the `docker-windows-static` zip file, InnoSetup creates the .exe file.
 
