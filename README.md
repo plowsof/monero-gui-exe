@@ -18,3 +18,7 @@ After running the actions script, you will be presented with the [hash](https://
 The official Monero GUI installer file is created on a windows machine, but we are able to replicate the final hash using Linux and W.I.N.E
 
 To use the `make_exe.sh` script at home, ensure you have an ubuntu with wine / jq / curl installed. The only way to cause a differing hash would be if i've failed to account for system timezone offsets ( hopefully not one of those 'it works on my machine' moments ) Test and let me know!
+
+#### Improvements / TODO's
+
+Currently this can only be used reliably 'after the fact' - when new binaries are uploaded to getmonero. Providing a copy of the Gitian-built GUI windows binaries is something in process at the moment. This will let people reproduce the installer before it is released. 
