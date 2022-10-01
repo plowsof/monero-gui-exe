@@ -21,4 +21,4 @@ To use the `make_exe.sh` script at home, ensure you have an ubuntu with wine / j
 
 #### Improvements / TODO's
 
-Currently this can only be used reliably 'after the fact' - when new binaries are uploaded to getmonero. Providing a copy of the Gitian-built GUI windows binaries is something in process at the moment. This will let people reproduce the installer before it is released. 
+Currently this can only be used 'after the fact' - when new binaries are uploaded to getmonero. Providing a copy of the Gitian-built GUI windows binaries is something in process at the moment. This will let people reproduce the installer before it is released. 
