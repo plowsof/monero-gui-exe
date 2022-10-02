@@ -1,6 +1,6 @@
-
-RUN_ID="3147123066"
-GH_KEY="<PUBLIC_REPO_ACCESS_TOKEN>"
+#!/bin/bash
+RUN_ID=$1
+GH_KEY=$2
 
 # clean up old build dir
 rm -rf bin
@@ -152,6 +152,9 @@ HOMEDIR="$(pwd)"
 offset=$(date +%z | sed 's/0//g')
 stamp=$(stat -c '%y' frombuild/monero-wallet-gui.exe) 
 echo "offset is $offset"
+if [[ "$offset" = "+" ]]; then
+  offset="+0"
+fi
 corrected_stamp=$(date -d"${stamp} ${offset} hours" +"%Y%m%d%H%M.%S")
 
 for f in "inno/installers/windows/*" "inno/installers/windows/**/*" "inno/installers/windows/**/**/*"; do
