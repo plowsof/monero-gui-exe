@@ -22,7 +22,33 @@ To use the `make_exe.sh` script at home, ensure you have an ubuntu with wine / j
 Or, you can just fork this repo, and run the actions file      
 ![Screenshot from 2022-10-01 01-15-55](https://user-images.githubusercontent.com/77655812/193374469-2ca675f0-fd43-4462-81de-5b753b8893db.png)
 
-
+## Docker
+Clone this repository:
+```
+git clone https://github.com/plowsof/monero-gui-exe
+```
+```
+cd monero-gui-exe
+```
+Note: The container is not optimised and its about 3GB
+```
+docker build -t gui .
+```
+Once built you need to run the container and pass it 2 arguments.
+1st - runid
+2nd - a github token with access to public repositories
+```
+docker run -it fail 3147123066 ghp_hunter2U*U*u8888**888
+```
+At the end you should see something like:
+```
+Hash of gitian built cli zip:
+0a3d4d1af7e094c05352c31b2dafcc6ccbc80edc195ca9eaedc919c36accd05a  monero-win-x64-v0.18.1.2.zip
+# ---------------------
+# Monero GUI installer hash:
+# c5dbf3e8fca7341dea1194e57b22f233ceb9471aca8692da6ffd0b4bc3a54a1b
+# ---------------------
+```
 #### Improvements / TODO's
 
 Currently this can only be used 'after the fact' - when new binaries are uploaded to getmonero. Providing a copy of the Gitian-built GUI windows binaries is something in process at the moment. This will let people reproduce the installer before it is released. 
