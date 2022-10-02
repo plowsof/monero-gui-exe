@@ -23,7 +23,6 @@ Or, you can just fork this repo, and run the actions file
 ![Screenshot from 2022-10-01 01-15-55](https://user-images.githubusercontent.com/77655812/193374469-2ca675f0-fd43-4462-81de-5b753b8893db.png)
 
 ## Docker
-( i should be using a windows-server docker , with the powershell script in use already.. no need for linux+wine here )
 Clone this repository:
 ```
 git clone https://github.com/plowsof/monero-gui-exe
