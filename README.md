@@ -1,7 +1,7 @@
 
 ### Monero GUI Installer
 
-The steps to create the Monero GUI installer in a deterministic method are described below.
+The steps to create the Monero GUI installer in a deterministic way are described below.
 
 First, a [pull request](https://github.com/monero-project/monero-gui/pull/4042) is made to create the new release binaries 
 
