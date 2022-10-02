@@ -13,11 +13,14 @@ After placing all the files correcly and touching them so they have the same mod
 
 This Repo provides a Github actions file , and also a shell script we can run at home on our ubuntu 20.04 machine (yes, i'll create a docker at some point) which ensures that no 'funny business' is happening on Githubs end.
 
-After running the actions script, you will be presented with the [hash](https://github.com/plowsof/monero-gui-exe/actions/runs/3162064376/jobs/5148317773#step:5:15) and the installer is uploaded for download at the end. [Seen here in this build of v18.1.2](https://github.com/plowsof/monero-gui-exe/actions/runs/3162064376)
+After running the actions script, you will be presented with the [hash](https://github.com/plowsof/monero-gui-exe/actions/runs/3162064376/jobs/5148317773#step:5:15) and the installer is uploaded at the end. [Seen here in this build of v18.1.2](https://github.com/plowsof/monero-gui-exe/actions/runs/3162064376)
 
 The official Monero GUI installer file is created on a windows machine, but we are able to replicate the final hash using Linux and W.I.N.E
 
-To use the `make_exe.sh` script at home, ensure you have an ubuntu with wine / jq / curl installed. The only way to cause a differing hash would be if i've failed to account for system timezone offsets ( hopefully not one of those 'it works on my machine' moments ) Test and let me know!
+To use the `make_exe.sh` script at home, ensure you have an ubuntu with wine / jq / curl / git installed. (pass the runid and a github token with public repo access)
+```
+./make_exe.sh 3147123066 ghp_hunter2U*U*u8888**888
+```
 
 Or, you can just fork this repo, and run the actions file      
 ![Screenshot from 2022-10-01 01-15-55](https://user-images.githubusercontent.com/77655812/193374469-2ca675f0-fd43-4462-81de-5b753b8893db.png)
