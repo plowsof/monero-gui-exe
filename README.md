@@ -38,7 +38,7 @@ Once built you need to run the container and pass it 2 arguments.
 1st - runid
 2nd - a github token with access to public repositories
 ```
-docker run -it fail 3147123066 ghp_hunter2U*U*u8888**888
+docker run -it gui 3147123066 ghp_hunter2U*U*u8888**888
 ```
 At the end you should see something like:
 ```
