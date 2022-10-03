@@ -54,4 +54,4 @@ Hash of gitian built cli zip:
 ```
 #### Improvements / TODO's
 
-Currently this can only be used 'after the fact' - when new binaries are uploaded to getmonero. Providing a copy of the Gitian-built GUI windows binaries is something in process at the moment. This will let people reproduce the installer before it is released. When [this pull request](https://github.com/monero-project/monero/pull/8602) from selsta is merged, we can reproduce/confirm hashes of the installer before it's actually released.
+Currently this can only be used 'after the fact' - when new binaries are uploaded to getmonero. Providing a copy of the Gitian-built CLI binaries is something in process at the moment. This will let people reproduce the installer before it is released. When [this pull request](https://github.com/monero-project/monero/pull/8602) from selsta is merged, we can reproduce/confirm hashes of the installer before it's actually released.
