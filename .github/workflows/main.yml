@@ -1,36 +1,76 @@
 on: 
   workflow_dispatch:
-    inputs:
-      guifile:
-        description: 'run id'     
-        required: true
-        default: "3147123066"
 
 jobs:
   GetTag:
     runs-on: ubuntu-20.04
     outputs:
       output1: ${{ steps.tag.outputs.thetag }}
+      output2: ${{ steps.tag.outputs.theid }}
+      output3: ${{ steps.tag.outputs.gitian }}
     steps:
     - name: Grab tag from runid (comfy)
       id: tag
       run: |
-        run_id="${{ github.event.inputs.guifile }}"
-        workflow_run=$(curl \
+        get_workflow_runs(){ page=$1 repo=$2 workflow=$3
+        FOUND_BIN=0
+        PREPARE=0
+        DEBUG=https://api.github.com/repos/monero-project/${repo}/actions/runs?page=$page
+        echo $DEBUG
+        runs=$(curl \
           -H "Accept: application/vnd.github+json" \
-          https://api.github.com/repos/monero-project/monero-gui/actions/runs/${run_id}/artifacts)
-        num=0
-        for artifact_name in $(echo ${workflow_run} | jq -r '.artifacts[].name'); do
-            TAG=$(echo ${workflow_run} | jq -r ".artifacts[${num}].workflow_run.head_branch")
-            break
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/monero-project/${repo}/actions/runs?page=$page)
+
+        for row in $(echo "${runs}" | jq -r '.workflow_runs[] | @base64'); do
+            _jq() {
+             echo ${row} | base64 --decode | jq -r ${1}
+            }
+            if [[ $(_jq '.path') = ".github/workflows/$workflow" ]]; then 
+                TAG=$(_jq '.head_branch')
+                #echo $TAG
+                is_v=${TAG:0:1}
+                is_p=${TAG:0:9}
+                IFS='.' read -ra SPLIT <<< "$TAG"
+                if [[ $is_p == "prepare-v" ]] || [[ $is_v == "v" ]] && [[ ${#SPLIT[@]} -eq 4 ]]; then
+                    RUNID=$(_jq '.id')
+                    FOUND_BIN=1
+                    if [[ $is_p = "prepare-v" ]]; then
+                        echo "BUILD prepare in use"
+                        TAG="${TAG/prepare-v/v}"
+                        PREPARE=1
+                    fi   
+                    break
+                fi
+            fi
         done
+        if [[ $FOUND_BIN -eq 0 ]]; then
+            ((page+=1))
+            get_workflow_runs $page $repo $workflow
+        else
+            FOUND_BIN=0
+        fi
+        }
+        get_workflow_runs 1 monero-gui build.yml
         echo $TAG
-        echo "::set-output name=thetag::$TAG"
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        if [[ $PREPARE = 1 ]]; then
+            echo "Caution: this is a build-prepare not official release" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "theid=$RUNID" >> "$GITHUB_OUTPUT"
+        echo "thetag=$TAG" >> "$GITHUB_OUTPUT"
+        echo "tag: ${TAG}" >> $GITHUB_STEP_SUMMARY
+        echo "runid: ${RUNID}" >> $GITHUB_STEP_SUMMARY
+        get_workflow_runs 1 monero gitian.yml
+        echo "gitian=$RUNID" >> "$GITHUB_OUTPUT"
+        echo "gitianid: ${RUNID}" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
   MakeExeWINE:
     runs-on: ubuntu-20.04
     needs: GetTag
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up dependencies
       run: |
         sudo apt-add-repository -y ppa:ondrej/php
@@ -42,15 +82,17 @@ jobs:
     - name: "Everything"
       run: |
         sudo apt-get install -y jq curl
-        RUN_ID=${{ github.event.inputs.guifile }}
+        RUN_ID=${{ needs.GetTag.outputs.output2 }}
         GH_KEY="${{ secrets.GITHUB_TOKEN }}"
         TAG=${{needs.GetTag.outputs.output1}}
+        GITIAN_ID=${{needs.GetTag.outputs.output3}}
 
         # Download docker-windows-static
-        download_artifact(){ run_id=$1 get_name=$2 save_as=$3 gh_key=$4
+        download_artifact(){ run_id=$1 repo=$2 get_name=$3 save_as=$4 gh_key=$5
+          echo https://api.github.com/repos/monero-project/${repo}/actions/runs/${run_id}/artifacts
           workflow_run=$(curl \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/monero-project/monero-gui/actions/runs/${run_id}/artifacts)
+            https://api.github.com/repos/monero-project/${repo}/actions/runs/${run_id}/artifacts)
           num=0
           for artifact_name in $(echo ${workflow_run} | jq -r '.artifacts[].name'); do
             if [[ "${artifact_name}" == "${get_name}" ]]; then
@@ -93,16 +135,16 @@ jobs:
         cd ..
 
         #download artifact also sets the TAG variable
-        download_artifact $RUN_ID "docker-windows-static" "docker-windows-static" "${GH_KEY}"
+        download_artifact $RUN_ID monero-gui "docker-windows-static" "docker-windows-static" "${GH_KEY}"
+        #download gitian cli files
+        download_artifact $GITIAN_ID monero "Windows" "Windows" "${GH_KEY}"
         #Extract static files to frombuild
         unzip "docker-windows-static" -d frombuild
+        #Extract gitian files here
+        unzip "Windows"
+        unzip "monero-x86_64-w64-mingw32-${TAG}.zip" -d clifiles
         # Download CLI/PDF file(s)
-        #wget -q "https://gui.xmr.pm/files/cli/${TAG}/monero-win-x64-${TAG}.zip" 
-        wget -q "https://downloads.getmonero.org/cli/win64" -O monero-win-x64-${TAG}.zip  
-
-
         wget -q "https://github.com/monero-ecosystem/monero-GUI-guide/releases/download/v1.9/monero-gui-wallet-guide.pdf" 
-        unzip "monero-win-x64-${TAG}.zip" -d clifiles
 
         # Create lowgfx bat file with heredoc (windows powershell uses \r\n)
         cr=$'\r'
@@ -202,12 +244,14 @@ jobs:
     - name: Print hashes
       run: |
         hash_exe=$(sha256sum bin/monero-gui-install-win-x64-${{needs.GetTag.outputs.output1}}.exe | awk '{print $1}')
-        echo "Hash of gitian built cli zip:"
-        sha256sum monero-win-x64-${{needs.GetTag.outputs.output1}}.zip
-        echo "# ---------------------"
-        echo "# Monero GUI installer hash:"
-        echo "# ${hash_exe}"
-        echo "# ---------------------"
+        echo "Hash of gitian built cli zip:" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo $(sha256sum monero-x86_64-w64-mingw32-${{needs.GetTag.outputs.output1}}.zip) >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "Monero GUI installer hash:" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "${hash_exe} monero-gui-install-win-x64-${{needs.GetTag.outputs.output1}}.exe" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
     - name: Archive code coverage results
       uses: actions/upload-artifact@v3
       with:
