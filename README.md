@@ -11,19 +11,18 @@ We download the `docker-windows-static` file, then obtain a copy of Monero's 64b
 
 After placing all the files correcly and touching them so they have the same modification time as the `monero-wallet-gui.exe` from the `docker-windows-static` zip file, InnoSetup creates the .exe file.
 
-This Repo provides a Github actions file , and also a shell script we can run at home on our ubuntu 20.04 machine (yes, i'll create a docker at some point) which ensures that no 'funny business' is happening on Githubs end.
+This Repo provides a Github actions file , and also a shell script we can run at home on our ubuntu 20.04 machine (Which the Dockerfile uses)
 
 After running the actions script, you will be presented with the [hash](https://github.com/plowsof/monero-gui-exe/actions/runs/3162064376/jobs/5148317773#step:5:15) and the installer is uploaded at the end. [Seen here in this build of v18.1.2](https://github.com/plowsof/monero-gui-exe/actions/runs/3162064376)
 
 The official Monero GUI installer file is created on a windows machine, but we are able to replicate the final hash using Linux and W.I.N.E
 
-To use the `make_exe.sh` script at home, ensure you have an ubuntu with wine / jq / curl / git installed. (pass the runid and a github token with public repo access)
+To use the `make_exe.sh` script at home, ensure you have an ubuntu with wine / jq / curl / git installed. (pass the github token with public repo access)
 ```
-./make_exe.sh 3147123066 ghp_hunter2U*U*u8888**888
+./make_exe.sh ghp_hunter2U*U*u8888**888
 ```
 
 Or, you can just fork this repo, and run the actions file      
-![Screenshot from 2022-10-01 01-15-55](https://user-images.githubusercontent.com/77655812/193374469-2ca675f0-fd43-4462-81de-5b753b8893db.png)
 
 ## Docker
 Clone this repository:
@@ -37,11 +36,10 @@ Note: The container is not optimised and its about 3GB
 ```
 docker build -t gui .
 ```
-Once built you need to run the container and pass it 2 arguments.
-1st - runid
-2nd - a github token with access to public repositories
+Once built you need to run the container and pass it 1 argument.
+1. a github token with access to public repositories
 ```
-docker run -it gui 3147123066 ghp_hunter2U*U*u8888**888
+docker run -it gui ghp_hunter2U*U*u8888**888
 ```
 At the end you should see something like:
 ```
@@ -54,4 +52,4 @@ Hash of gitian built cli zip:
 ```
 #### Improvements / TODO's
 
-Currently this can only be used 'after the fact' - when new binaries are uploaded to getmonero. Providing a copy of the Gitian-built CLI binaries is something in process at the moment. This will let people reproduce the installer before it is released. When [this pull request](https://github.com/monero-project/monero/pull/8602) from selsta is merged, we can reproduce/confirm hashes of the installer before it's actually released.
+- Package the linux / windows archive files too
