@@ -1,15 +1,57 @@
 #!/bin/bash
-RUN_ID=$1
-GH_KEY=$2
+GH_KEY=$1
 
 # clean up old build dir
 rm -rf bin
 
+# Get most recent runid from monero/gitian.yml and monero-gui/build.yml
+get_workflow_runs(){ page=$1 repo=$2 workflow=$3
+  FOUND_BIN=0
+  PREPARE=0
+  runs=$(curl \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: token ${GH_KEY}" \
+    https://api.github.com/repos/monero-project/${repo}/actions/runs?page=$page)
+
+  for row in $(echo "${runs}" | jq -r '.workflow_runs[] | @base64'); do
+      _jq() {
+       echo ${row} | base64 --decode | jq -r ${1}
+      }
+      if [[ $(_jq '.path') = ".github/workflows/$workflow" ]]; then 
+          TAG=$(_jq '.head_branch')
+          echo $TAG
+          is_v=${TAG:0:1}
+          is_p=${TAG:0:9}
+          IFS='.' read -ra SPLIT <<< "$TAG"
+          if [[ $is_v = "v" ]] || [[ $is_p = "prepare-v" ]] && [[ ${#SPLIT[@]} -eq 4 ]]; then
+              RUNID=$(_jq '.id')
+              FOUND_BIN=1
+              if [[ $is_p = "prepare-v" ]]; then
+                TAG="${TAG/prepare-v/v}"
+                PREPARE=1
+                echo "Tag is now ${TAG}"
+              fi    
+              break
+          fi
+      fi
+  done
+  if [[ $FOUND_BIN -eq 0 ]]; then
+      ((page+=1))
+      get_workflow_runs $page $repo $workflow
+  else
+    FOUND_BIN=0
+  fi
+}
+get_workflow_runs 1 monero-gui "build.yml"
+RUN_ID=$RUNID
+get_workflow_runs 1 monero "gitian.yml"
+GITIAN_ID=$RUNID
+
 # Download docker-windows-static
-download_artifact(){ run_id=$1 get_name=$2 save_as=$3 gh_key=$4
+download_artifact(){ run_id=$1 repo=$2 get_name=$3 save_as=$4 gh_key=$5
   workflow_run=$(curl \
     -H "Accept: application/vnd.github+json" \
-    https://api.github.com/repos/monero-project/monero-gui/actions/runs/${run_id}/artifacts)
+    https://api.github.com/repos/monero-project/${repo}/actions/runs/${run_id}/artifacts)
   num=0
   for artifact_name in $(echo ${workflow_run} | jq -r '.artifacts[].name'); do
     if [[ "${artifact_name}" == "${get_name}" ]]; then
@@ -52,16 +94,16 @@ done
 cd ..
 
 #download artifact also sets the TAG variable
-download_artifact $RUN_ID "docker-windows-static" "docker-windows-static" "${GH_KEY}"
+download_artifact $RUN_ID monero-gui "docker-windows-static" "docker-windows-static" "${GH_KEY}"
+download_artifact $GITIAN_ID monero "Windows" "Windows" "${GH_KEY}"
 #Extract static files to frombuild
 unzip "docker-windows-static" -d frombuild
 # Download CLI/PDF file(s)
 #wget -q "https://gui.xmr.pm/files/cli/${TAG}/monero-win-x64-${TAG}.zip" 
-wget -q "https://downloads.getmonero.org/cli/win64" -O monero-win-x64-${TAG}.zip  
-
+unzip "Windows"
 
 wget -q "https://github.com/monero-ecosystem/monero-GUI-guide/releases/download/v1.9/monero-gui-wallet-guide.pdf" 
-unzip "monero-win-x64-${TAG}.zip" -d clifiles
+unzip "monero-x86_64-w64-mingw32-${TAG}.zip" -d clifiles
 
 # Create lowgfx bat file with heredoc (windows powershell uses \r\n)
 cr=$'\r'
@@ -169,11 +211,14 @@ mv  inno/installers/windows/Output/mysetup.exe "bin/monero-gui-install-win-x64-$
 
 hash_exe=$(sha256sum bin/monero-gui-install-win-x64-${TAG}.exe| awk '{print $1}')
 echo "Hash of gitian built cli zip:"
-sha256sum monero-win-x64-${TAG}.zip
+sha256sum monero-x86_64-w64-mingw32-${TAG}.zip
 echo "# ---------------------"
 echo "# Monero GUI installer hash:"
 echo "# ${hash_exe}"
 echo "# ---------------------"
+if [[ $PREPARE -eq 1 ]]; then
+  echo "Caution: we are using build-prepare script not official tag"
+fi
 
 # cleanup
 
@@ -182,6 +227,7 @@ rm -rf dummy
 rm -rf frombuild
 rm -rf inno
 rm docker-windows-static
-rm "monero-win-x64-${TAG}.zip"
+rm Windows
+rm *zip
 rm start-low-graphics-mode.bat
 rm monero-gui-wallet-guide.pdf
