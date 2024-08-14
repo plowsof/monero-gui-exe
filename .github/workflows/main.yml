@@ -253,7 +253,7 @@ jobs:
         echo "${hash_exe} monero-gui-install-win-x64-${{needs.GetTag.outputs.output1}}.exe" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
     - name: Archive code coverage results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: monero-gui-install-win-x64-${{needs.GetTag.outputs.output1}}
         path: bin/monero-gui-install-win-x64-${{needs.GetTag.outputs.output1}}.exe
