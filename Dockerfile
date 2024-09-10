@@ -10,18 +10,16 @@ RUN apt-get update -y && \
         language-pack-zh-han* \
         locales \
         locales-all \
-        wget
+        wget \
+        gpg-agent
 
-# Install Wine
-RUN dpkg --add-architecture i386 && \
-    wget -nc https://dl.winehq.org/wine-builds/winehq.key && \
-    mv winehq.key /usr/share/keyrings/winehq-archive.key && \
-    wget -nc https://dl.winehq.org/wine-builds/ubuntu/dists/focal/winehq-focal.sources && \
-    mv winehq-focal.sources /etc/apt/sources.list.d/ && \
-    apt-get update -y && \
-    # Wine 7.0 stable has some issues with some games I tested
-    # Use Wine 7.11 staging instead
-    apt-get install -y --install-recommends winehq-staging
+ARG WINE_BRANCH="stable"
+RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add - \
+    && echo "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" >> /etc/apt/sources.list \
+    && dpkg --add-architecture i386 \
+    && apt-get update \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-${WINE_BRANCH} \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY . ./app
 
