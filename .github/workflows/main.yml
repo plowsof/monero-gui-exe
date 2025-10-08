@@ -3,7 +3,7 @@ on:
 
 jobs:
   GetTag:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       output1: ${{ steps.tag.outputs.thetag }}
       output2: ${{ steps.tag.outputs.theid }}
@@ -67,7 +67,7 @@ jobs:
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
   MakeExeWINE:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: GetTag
     steps:
     - uses: actions/checkout@v4
